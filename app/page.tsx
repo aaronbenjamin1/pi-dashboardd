@@ -81,10 +81,8 @@ export default function Page() {
     try {
       const res = await fetchLeads({ minScore, severity, caseType, status, search, sortKey, sortDir, page });
       setRows(res.data);
-      setTotalCount(prev => {
-        if (prev > 0 && res.count > prev) playNewLeadsChime();
-        return res.count;
-      });
+      setTotalCount(res.count);
+      playNewLeadsChime();
       setSource(res.source);
       const newMax = Math.max(1, Math.ceil(res.count / PAGE_SIZE));
       if (page > newMax) setPage(1);
