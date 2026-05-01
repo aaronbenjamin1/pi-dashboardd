@@ -10,6 +10,24 @@ import LeadsTable from "@/components/LeadsTable";
 import Pagination from "@/components/Pagination";
 import StatsBar from "@/components/StatsBar";
 
+function playNewLeadsChime() {
+  try {
+    const ctx = new AudioContext();
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    [[660, 0], [880, 0.12], [1100, 0.24]].forEach(([freq, delay]) => {
+      const osc = ctx.createOscillator();
+      osc.connect(gain);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0.18, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.35);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.35);
+    });
+  } catch {}
+}
+
 const C = {
   bg: "#080e1a",
   card: "#0c1526",
@@ -63,7 +81,10 @@ export default function Page() {
     try {
       const res = await fetchLeads({ minScore, severity, caseType, status, search, sortKey, sortDir, page });
       setRows(res.data);
-      setTotalCount(res.count);
+      setTotalCount(prev => {
+        if (prev > 0 && res.count > prev) playNewLeadsChime();
+        return res.count;
+      });
       setSource(res.source);
       const newMax = Math.max(1, Math.ceil(res.count / PAGE_SIZE));
       if (page > newMax) setPage(1);
