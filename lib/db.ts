@@ -64,11 +64,15 @@ export async function fetchStats(): Promise<Stats> {
   const supabase = getSupabase();
   if (!supabase) return { total: 0, fatal: 0, highPriority: 0, newLeads: 0 };
 
+  const active = () => supabase.from("articles")
+    .select("id", { count: "exact", head: true })
+    .not("status", "in", '("closed","ignore")');
+
   const [total, fatal, highPriority, newLeads] = await Promise.all([
-    supabase.from("articles").select("id", { count: "exact", head: true }),
-    supabase.from("articles").select("id", { count: "exact", head: true }).eq("severity", "fatal"),
-    supabase.from("articles").select("id", { count: "exact", head: true }).gte("lead_score", 85),
-    supabase.from("articles").select("id", { count: "exact", head: true }).eq("status", "new"),
+    active(),
+    active().eq("severity", "fatal"),
+    active().gte("lead_score", 85),
+    active().eq("status", "new"),
   ]);
 
   return {
