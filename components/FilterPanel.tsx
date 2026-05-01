@@ -1,5 +1,6 @@
 "use client";
-import { SEVERITIES, CASE_TYPES, STATUSES } from "@/lib/types";
+import { SEVERITIES, CASE_TYPES, STATUS_OPTIONS } from "@/lib/types";
+import { badgeStyle, statusKind } from "@/lib/utils";
 
 const C = {
   card: "#0c1526",
@@ -27,13 +28,13 @@ type Props = {
   minScore: number;
   severity: string;
   caseType: string;
-  status: string;
+  status: string[];
   searchInput: string;
   error: string | null;
   onMinScore: (v: number) => void;
   onSeverity: (v: string) => void;
   onCaseType: (v: string) => void;
-  onStatus: (v: string) => void;
+  onStatus: (v: string[]) => void;
   onSearch: (v: string) => void;
 };
 
@@ -61,7 +62,6 @@ export default function FilterPanel({
         {([
           { lbl: "Severity", value: severity, opts: SEVERITIES, onChange: onSeverity },
           { lbl: "Case Type", value: caseType, opts: CASE_TYPES, onChange: onCaseType },
-          { lbl: "Status", value: status, opts: STATUSES, onChange: onStatus },
         ] as const).map(({ lbl, value, opts, onChange }) => (
           <div key={lbl} style={{ display: "grid", gap: 6 }}>
             <div style={label}>{lbl}</div>
@@ -74,6 +74,44 @@ export default function FilterPanel({
             </select>
           </div>
         ))}
+
+        <div style={{ display: "grid", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={label}>Status</span>
+            {status.length > 0 && (
+              <button
+                onClick={() => onStatus([])}
+                style={{ background: "none", border: "none", color: "#4a6080", fontSize: 11, cursor: "pointer", padding: 0, textDecoration: "underline" }}
+              >
+                clear
+              </button>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {STATUS_OPTIONS.map(s => {
+              const active = status.includes(s);
+              const base = badgeStyle(statusKind(s));
+              return (
+                <button
+                  key={s}
+                  onClick={() => onStatus(active ? status.filter(x => x !== s) : [...status, s])}
+                  style={{
+                    ...base,
+                    cursor: "pointer",
+                    opacity: active ? 1 : 0.35,
+                    border: active ? "1.5px solid currentColor" : base.border,
+                    transition: "opacity 0.15s",
+                    background: "none",
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "0.8"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = active ? "1" : "0.35"; }}
+                >
+                  {s}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <div style={{ flex: "1 1 260px", display: "grid", gap: 6 }}>
           <div style={label}>Search</div>

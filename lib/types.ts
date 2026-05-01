@@ -15,7 +15,6 @@ export type Row = {
 
 export const SEVERITIES = ["all", "fatal", "serious_injury", "injury", "unknown"] as const;
 export const CASE_TYPES = ["all", "truck", "pedestrian", "auto", "motorcycle", "unknown"] as const;
-export const STATUSES = ["all", "new", "reviewing", "contacted", "done", "closed", "ignore"] as const;
 export const STATUS_OPTIONS = ["new", "reviewing", "contacted", "done", "closed", "ignore"] as const;
 
 export const PAGE_SIZE = 50;

@@ -6,7 +6,7 @@ export type FetchParams = {
   minScore: number;
   severity: string;
   caseType: string;
-  status: string;
+  status: string[];
   search: string;
   sortKey: SortKey;
   sortDir: SortDir;
@@ -27,7 +27,7 @@ function applyFilters(q: any, params: FetchParams) {
   if (minScore > 0) q = q.gte("lead_score", minScore);
   if (severity !== "all") q = q.eq("severity", severity);
   if (caseType !== "all") q = q.eq("case_type", caseType);
-  if (status !== "all") q = q.eq("status", status);
+  if (status.length > 0) q = q.in("status", status);
   if (search.trim()) {
     const s = search.trim();
     q = q.or(`title.ilike.%${s}%,publisher_domain.ilike.%${s}%`);

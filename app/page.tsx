@@ -28,7 +28,7 @@ export default function Page() {
   const [minScore, setMinScore] = useState(70);
   const [severity, setSeverity] = useState("all");
   const [caseType, setCaseType] = useState("all");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState<string[]>([]);
 
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
