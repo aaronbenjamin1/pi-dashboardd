@@ -36,7 +36,6 @@ export default function Page() {
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>("triaged_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [autoRefresh, setAutoRefresh] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -70,12 +69,6 @@ export default function Page() {
   }, [minScore, severity, caseType, status, search, sortKey, sortDir, page]);
 
   useEffect(() => { load(); }, [load]);
-
-  useEffect(() => {
-    if (!autoRefresh) return;
-    const t = setInterval(load, 15000);
-    return () => clearInterval(t);
-  }, [autoRefresh, load]);
 
   function toggleSort(key: SortKey) {
     if (sortKey !== key) { setSortKey(key); setSortDir("desc"); }
@@ -138,21 +131,6 @@ export default function Page() {
                 <code style={{ fontFamily: "ui-monospace,monospace", color: C.accent }}>{source ?? "…"}</code>
               </div>
 
-              <div style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "4px 10px", borderRadius: 8,
-                background: autoRefresh ? "rgba(74,222,128,0.08)" : "rgba(148,163,184,0.06)",
-                border: `1px solid ${autoRefresh ? "rgba(74,222,128,0.25)" : "rgba(148,163,184,0.15)"}`,
-                fontSize: 12, color: autoRefresh ? "#4ade80" : C.subtle,
-              }}>
-                <span style={{
-                  width: 6, height: 6, borderRadius: "50%",
-                  background: autoRefresh ? "#4ade80" : C.muted,
-                  boxShadow: autoRefresh ? "0 0 6px #4ade80" : "none",
-                  display: "inline-block",
-                }} />
-                {autoRefresh ? "Live" : "Paused"}
-              </div>
             </div>
 
             <div style={{ marginTop: 6, color: C.muted, fontSize: 13 }}>
@@ -162,25 +140,19 @@ export default function Page() {
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <button
-              onClick={load}
-              style={{
-                border: `1px solid ${C.border}`, background: "rgba(255,255,255,0.04)",
-                color: C.text, padding: "9px 16px", borderRadius: 10,
-                fontWeight: 600, cursor: "pointer", fontSize: 13,
-                transition: "background 0.15s",
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
-            >
-              ↻ Refresh
-            </button>
-            <label style={{ display: "flex", gap: 8, alignItems: "center", color: C.subtle, fontSize: 13, cursor: "pointer", userSelect: "none" }}>
-              <input type="checkbox" checked={autoRefresh} onChange={e => setAutoRefresh(e.target.checked)} />
-              Auto (15s)
-            </label>
-          </div>
+          <button
+            onClick={load}
+            style={{
+              border: `1px solid ${C.border}`, background: "rgba(255,255,255,0.04)",
+              color: C.text, padding: "9px 16px", borderRadius: 10,
+              fontWeight: 600, cursor: "pointer", fontSize: 13,
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+          >
+            ↻ Refresh
+          </button>
         </div>
 
         <FilterPanel
