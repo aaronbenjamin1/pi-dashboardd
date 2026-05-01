@@ -58,6 +58,27 @@ export async function fetchLeads(params: FetchParams): Promise<FetchResult> {
   return { data: (r2.data as Row[]) ?? [], count: r2.count ?? 0, source: "articles" };
 }
 
+export type Stats = { total: number; fatal: number; highPriority: number; newLeads: number; };
+
+export async function fetchStats(): Promise<Stats> {
+  const supabase = getSupabase();
+  if (!supabase) return { total: 0, fatal: 0, highPriority: 0, newLeads: 0 };
+
+  const [total, fatal, highPriority, newLeads] = await Promise.all([
+    supabase.from("articles").select("id", { count: "exact", head: true }),
+    supabase.from("articles").select("id", { count: "exact", head: true }).eq("severity", "fatal"),
+    supabase.from("articles").select("id", { count: "exact", head: true }).gte("lead_score", 85),
+    supabase.from("articles").select("id", { count: "exact", head: true }).eq("status", "new"),
+  ]);
+
+  return {
+    total: total.count ?? 0,
+    fatal: fatal.count ?? 0,
+    highPriority: highPriority.count ?? 0,
+    newLeads: newLeads.count ?? 0,
+  };
+}
+
 export async function deleteArticle(id: string): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase not initialized");

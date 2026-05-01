@@ -17,3 +17,13 @@ html, body {
 ::-webkit-scrollbar-track { background: #0c1526; }
 ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #2a5080; }
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

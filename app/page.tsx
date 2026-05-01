@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { fetchLeads, updateStatus, deleteArticle } from "@/lib/db";
+import { fetchLeads, fetchStats, updateStatus, deleteArticle } from "@/lib/db";
+import type { Stats } from "@/lib/db";
 import type { SortKey, SortDir, Row } from "@/lib/types";
 import { PAGE_SIZE } from "@/lib/types";
 import FilterPanel from "@/components/FilterPanel";
 import LeadsTable from "@/components/LeadsTable";
 import Pagination from "@/components/Pagination";
+import StatsBar from "@/components/StatsBar";
 
 const C = {
   bg: "#080e1a",
@@ -24,6 +26,8 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<"v_triage_live" | "articles" | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const [minScore, setMinScore] = useState(70);
   const [severity, setSeverity] = useState("all");
@@ -41,6 +45,10 @@ export default function Page() {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const fromShown = totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const toShown = Math.min(page * PAGE_SIZE, totalCount);
+
+  useEffect(() => {
+    fetchStats().then(s => { setStats(s); setStatsLoading(false); });
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => { setSearch(searchInput); setPage(1); }, 300);
@@ -81,6 +89,8 @@ export default function Page() {
       setRows(prev => prev.filter(r => r.id !== id));
       setTotalCount(prev => prev - 1);
       setExpandedId(null);
+      // refresh stats after delete
+      fetchStats().then(setStats);
     } catch (e: any) {
       alert(`Failed to delete: ${e.message}`);
     }
@@ -90,71 +100,94 @@ export default function Page() {
     try {
       await updateStatus(id, newStatus);
       setRows(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
+      fetchStats().then(setStats);
     } catch (e: any) {
       alert(`Failed to update status: ${e.message}`);
     }
   }
 
+  const activeFilters = [
+    minScore !== 70 && `score ≥ ${minScore}`,
+    severity !== "all" && severity,
+    caseType !== "all" && caseType,
+    ...status,
+    search && `"${search}"`,
+  ].filter(Boolean);
+
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, padding: "32px 20px", color: C.text }}>
-      {/* Subtle radial glow at top */}
+    <div style={{ minHeight: "100vh", background: C.bg, padding: "28px 20px 60px", color: C.text }}>
+      {/* Top glow */}
       <div style={{
-        position: "fixed", top: 0, left: 0, right: 0, height: 400, pointerEvents: "none", zIndex: 0,
-        background: "radial-gradient(ellipse 900px 300px at 50% -60px, rgba(59,130,246,0.12) 0%, transparent 70%)",
+        position: "fixed", top: 0, left: 0, right: 0, height: 500, pointerEvents: "none", zIndex: 0,
+        background: "radial-gradient(ellipse 1000px 350px at 50% -80px, rgba(59,130,246,0.1) 0%, transparent 65%)",
       }} />
 
-      <div style={{ maxWidth: 1420, margin: "0 auto", position: "relative", zIndex: 1 }}>
+      <div style={{ maxWidth: 1440, margin: "0 auto", position: "relative", zIndex: 1 }}>
 
         {/* ── Header ── */}
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", alignItems: "center", marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 28 }}>
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: "linear-gradient(135deg, #1d4ed8 0%, #7c3aed 100%)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 18, boxShadow: "0 0 20px rgba(59,130,246,0.4)",
-                }}>⚖️</div>
-                <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: -0.6, color: C.text }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                background: "linear-gradient(135deg, #1d4ed8 0%, #6d28d9 100%)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 20, boxShadow: "0 0 24px rgba(59,130,246,0.35)",
+              }}>⚖️</div>
+              <div>
+                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: -0.5, color: C.text, lineHeight: 1.1 }}>
                   PI Lead Monitor
                 </h1>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+                  {loading
+                    ? <span style={{ color: "#2a5a9a" }}>loading…</span>
+                    : <>
+                        {totalCount.toLocaleString()} leads
+                        {activeFilters.length > 0 && <span style={{ color: "#2a4a68" }}> · filtered by {activeFilters.join(", ")}</span>}
+                      </>}
+                </div>
               </div>
-
-              <div style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "4px 10px", borderRadius: 8,
-                background: "rgba(148,163,184,0.06)", border: "1px solid rgba(148,163,184,0.15)",
-                fontSize: 12, color: C.subtle,
-              }}>
-                <span style={{ opacity: 0.6 }}>src</span>
-                <code style={{ fontFamily: "ui-monospace,monospace", color: C.accent }}>{source ?? "…"}</code>
-              </div>
-
-            </div>
-
-            <div style={{ marginTop: 6, color: C.muted, fontSize: 13 }}>
-              {loading
-                ? <span style={{ color: C.accent }}>Fetching…</span>
-                : `${totalCount.toLocaleString()} leads · showing ${fromShown}–${toShown} · sorted by ${sortKey} ${sortDir}`}
             </div>
           </div>
 
-          <button
-            onClick={load}
-            style={{
-              border: `1px solid ${C.border}`, background: "rgba(255,255,255,0.04)",
-              color: C.text, padding: "9px 16px", borderRadius: 10,
-              fontWeight: 600, cursor: "pointer", fontSize: 13,
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
-          >
-            ↻ Refresh
-          </button>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            {source && (
+              <div style={{
+                padding: "6px 11px", borderRadius: 8, fontSize: 11, fontWeight: 600,
+                background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)",
+                color: "#3b82f6",
+              }}>
+                <code style={{ fontFamily: "ui-monospace,monospace" }}>{source}</code>
+              </div>
+            )}
+            <button
+              onClick={() => { load(); fetchStats().then(setStats); }}
+              style={{
+                border: `1px solid ${C.border}`, background: "rgba(255,255,255,0.04)",
+                color: C.subtle, padding: "8px 16px", borderRadius: 10,
+                fontWeight: 600, cursor: "pointer", fontSize: 13,
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = "rgba(255,255,255,0.08)";
+                el.style.color = C.text;
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = "rgba(255,255,255,0.04)";
+                el.style.color = C.subtle;
+              }}
+            >
+              ↻ Refresh
+            </button>
+          </div>
         </div>
 
+        {/* ── Stats ── */}
+        <StatsBar stats={stats} loading={statsLoading} />
+
+        {/* ── Filters ── */}
         <FilterPanel
           minScore={minScore} severity={severity} caseType={caseType}
           status={status} searchInput={searchInput} error={error}
@@ -162,6 +195,7 @@ export default function Page() {
           onStatus={setStatus} onSearch={setSearchInput}
         />
 
+        {/* ── Pagination ── */}
         <Pagination
           page={page} totalPages={totalPages} totalCount={totalCount}
           fromShown={fromShown} toShown={toShown} loading={loading}
@@ -170,6 +204,7 @@ export default function Page() {
           onJump={setPage}
         />
 
+        {/* ── Table ── */}
         <LeadsTable
           rows={rows} loading={loading} sortKey={sortKey} sortDir={sortDir}
           expandedId={expandedId}
