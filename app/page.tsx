@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { fetchLeads, updateStatus } from "@/lib/db";
+import { fetchLeads, updateStatus, deleteArticle } from "@/lib/db";
 import type { SortKey, SortDir, Row } from "@/lib/types";
 import { PAGE_SIZE } from "@/lib/types";
 import FilterPanel from "@/components/FilterPanel";
@@ -80,6 +80,17 @@ export default function Page() {
   function toggleSort(key: SortKey) {
     if (sortKey !== key) { setSortKey(key); setSortDir("desc"); }
     else setSortDir(d => d === "desc" ? "asc" : "desc");
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await deleteArticle(id);
+      setRows(prev => prev.filter(r => r.id !== id));
+      setTotalCount(prev => prev - 1);
+      setExpandedId(null);
+    } catch (e: any) {
+      alert(`Failed to delete: ${e.message}`);
+    }
   }
 
   async function handleStatusChange(id: string, newStatus: string) {
@@ -193,6 +204,7 @@ export default function Page() {
           onToggleSort={toggleSort}
           onToggleExpand={id => setExpandedId(cur => cur === id ? null : id)}
           onStatusChange={handleStatusChange}
+          onDelete={handleDelete}
         />
 
       </div>

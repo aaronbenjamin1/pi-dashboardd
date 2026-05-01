@@ -23,11 +23,18 @@ const card: React.CSSProperties = {
 type Props = {
   row: Row;
   onStatusChange: (id: string, status: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 };
 
-export default function RowDetail({ row, onStatusChange }: Props) {
+export default function RowDetail({ row, onStatusChange, onDelete }: Props) {
   function copyUrl() {
     if (row.url) navigator.clipboard.writeText(row.url).catch(() => {});
+  }
+
+  function handleDelete() {
+    if (confirm(`Delete "${row.title ?? row.id}"? This cannot be undone.`)) {
+      onDelete(row.id);
+    }
   }
 
   return (
@@ -44,18 +51,32 @@ export default function RowDetail({ row, onStatusChange }: Props) {
           <div style={card}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <div style={{ fontWeight: 700, fontSize: 13, color: C.subtle, letterSpacing: 0.6, textTransform: "uppercase" }}>Details</div>
-              {row.url && (
+              <div style={{ display: "flex", gap: 8 }}>
+                {row.url && (
+                  <button
+                    onClick={copyUrl}
+                    style={{
+                      border: `1px solid ${C.border}`, background: "rgba(255,255,255,0.04)",
+                      color: C.subtle, padding: "5px 10px", borderRadius: 8,
+                      fontWeight: 600, cursor: "pointer", fontSize: 11,
+                    }}
+                  >
+                    Copy URL
+                  </button>
+                )}
                 <button
-                  onClick={copyUrl}
+                  onClick={handleDelete}
                   style={{
-                    border: `1px solid ${C.border}`, background: "rgba(255,255,255,0.04)",
-                    color: C.subtle, padding: "5px 10px", borderRadius: 8,
+                    border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)",
+                    color: "#f87171", padding: "5px 10px", borderRadius: 8,
                     fontWeight: 600, cursor: "pointer", fontSize: 11,
                   }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.18)"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)"; }}
                 >
-                  Copy URL
+                  Delete
                 </button>
-              )}
+              </div>
             </div>
             <div style={{ display: "grid", gap: 10, fontSize: 13 }}>
               {[

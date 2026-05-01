@@ -58,6 +58,14 @@ export async function fetchLeads(params: FetchParams): Promise<FetchResult> {
   return { data: (r2.data as Row[]) ?? [], count: r2.count ?? 0, source: "articles" };
 }
 
+export async function deleteArticle(id: string): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase not initialized");
+
+  const { error } = await supabase.from("articles").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 export async function updateStatus(id: string, status: string): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase not initialized");

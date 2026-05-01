@@ -48,9 +48,10 @@ type Props = {
   onToggleSort: (key: SortKey) => void;
   onToggleExpand: (id: string) => void;
   onStatusChange: (id: string, status: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 };
 
-export default function LeadsTable({ rows, loading, sortKey, sortDir, expandedId, onToggleSort, onToggleExpand, onStatusChange }: Props) {
+export default function LeadsTable({ rows, loading, sortKey, sortDir, expandedId, onToggleSort, onToggleExpand, onStatusChange, onDelete }: Props) {
   function arrow(key: SortKey) {
     if (sortKey !== key) return <span style={{ color: "#1e3a5f", marginLeft: 4 }}>↕</span>;
     return <span style={{ color: C.accent, marginLeft: 4 }}>{sortDir === "asc" ? "↑" : "↓"}</span>;
@@ -175,7 +176,7 @@ export default function LeadsTable({ rows, loading, sortKey, sortDir, expandedId
                   </tr>
 
                   {isExpanded && (
-                    <RowDetail row={r} onStatusChange={onStatusChange} />
+                    <RowDetail row={r} onStatusChange={onStatusChange} onDelete={onDelete} />
                   )}
                 </React.Fragment>
               );
