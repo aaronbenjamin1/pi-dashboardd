@@ -10,6 +10,14 @@ import LeadsTable from "@/components/LeadsTable";
 import Pagination from "@/components/Pagination";
 import StatsBar from "@/components/StatsBar";
 
+function sinkClosed(rows: Row[]) {
+  return [...rows].sort((a, b) => {
+    const aDown = a.status === "closed" || a.status === "ignore" ? 1 : 0;
+    const bDown = b.status === "closed" || b.status === "ignore" ? 1 : 0;
+    return aDown - bDown;
+  });
+}
+
 function playNewLeadsChime() {
   try {
     const ctx = new AudioContext();
@@ -80,7 +88,7 @@ export default function Page() {
     setError(null);
     try {
       const res = await fetchLeads({ minScore, severity, caseType, status, search, sortKey, sortDir, page });
-      setRows(res.data);
+      setRows(sinkClosed(res.data));
       setTotalCount(prev => {
         if (prev > 0 && res.count > prev) playNewLeadsChime();
         return res.count;
@@ -120,7 +128,7 @@ export default function Page() {
   async function handleStatusChange(id: string, newStatus: string) {
     try {
       await updateStatus(id, newStatus);
-      setRows(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
+      setRows(prev => sinkClosed(prev.map(r => r.id === id ? { ...r, status: newStatus } : r)));
       fetchStats().then(setStats);
     } catch (e: any) {
       alert(`Failed to update status: ${e.message}`);
