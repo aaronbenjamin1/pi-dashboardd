@@ -1,20 +1,26 @@
 "use client";
 import { SEVERITIES, CASE_TYPES, STATUSES } from "@/lib/types";
 
-const subtle: React.CSSProperties = { color: "#6b7280" };
-const inputStyle: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid #e5e7eb",
-  outline: "none",
-  background: "#fff",
-  fontSize: 14,
+const C = {
+  card: "#0c1526",
+  border: "#1a2d4a",
+  text: "#e2e8f0",
+  muted: "#4a6080",
+  subtle: "#94a3b8",
+  input: "#0a1628",
 };
-const card: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #e5e7eb",
-  borderRadius: 18,
-  boxShadow: "0 10px 30px rgba(17,24,39,0.08)",
+
+const label: React.CSSProperties = { color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase" };
+
+const inputStyle: React.CSSProperties = {
+  padding: "9px 12px",
+  borderRadius: 10,
+  border: `1px solid ${C.border}`,
+  outline: "none",
+  background: C.input,
+  color: C.text,
+  fontSize: 13,
+  transition: "border-color 0.15s",
 };
 
 type Props = {
@@ -36,37 +42,41 @@ export default function FilterPanel({
   onMinScore, onSeverity, onCaseType, onStatus, onSearch,
 }: Props) {
   return (
-    <div style={{ marginTop: 16, padding: 16, ...card }}>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end" }}>
+    <div style={{
+      marginTop: 16, padding: "16px 20px",
+      background: C.card, border: `1px solid ${C.border}`,
+      borderRadius: 14, boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+    }}>
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "end" }}>
         <div style={{ display: "grid", gap: 6 }}>
-          <div style={{ ...subtle, fontSize: 12, fontWeight: 700 }}>Min score</div>
+          <div style={label}>Min Score</div>
           <input
             type="number"
             value={minScore}
             onChange={e => onMinScore(Number(e.target.value))}
-            style={{ ...inputStyle, width: 110 }}
+            style={{ ...inputStyle, width: 100 }}
           />
         </div>
 
         {([
-          { label: "Severity", value: severity, opts: SEVERITIES, onChange: onSeverity },
-          { label: "Case type", value: caseType, opts: CASE_TYPES, onChange: onCaseType },
-          { label: "Status", value: status, opts: STATUSES, onChange: onStatus },
-        ] as const).map(({ label, value, opts, onChange }) => (
-          <div key={label} style={{ display: "grid", gap: 6 }}>
-            <div style={{ ...subtle, fontSize: 12, fontWeight: 700 }}>{label}</div>
+          { lbl: "Severity", value: severity, opts: SEVERITIES, onChange: onSeverity },
+          { lbl: "Case Type", value: caseType, opts: CASE_TYPES, onChange: onCaseType },
+          { lbl: "Status", value: status, opts: STATUSES, onChange: onStatus },
+        ] as const).map(({ lbl, value, opts, onChange }) => (
+          <div key={lbl} style={{ display: "grid", gap: 6 }}>
+            <div style={label}>{lbl}</div>
             <select
               value={value}
               onChange={e => onChange(e.target.value as any)}
-              style={{ ...inputStyle, minWidth: 180 }}
+              style={{ ...inputStyle, minWidth: 160 }}
             >
-              {opts.map(v => <option key={v} value={v}>{v}</option>)}
+              {opts.map(v => <option key={v} value={v} style={{ background: "#0c1526" }}>{v}</option>)}
             </select>
           </div>
         ))}
 
-        <div style={{ flex: "1 1 300px", display: "grid", gap: 6 }}>
-          <div style={{ ...subtle, fontSize: 12, fontWeight: 700 }}>Search (all pages)</div>
+        <div style={{ flex: "1 1 260px", display: "grid", gap: 6 }}>
+          <div style={label}>Search</div>
           <input
             value={searchInput}
             onChange={e => onSearch(e.target.value)}
@@ -77,8 +87,12 @@ export default function FilterPanel({
       </div>
 
       {error && (
-        <div style={{ marginTop: 12, padding: 12, borderRadius: 12, border: "1px solid #fecdd3", background: "#fff1f2", color: "#9f1239", fontWeight: 700 }}>
-          Error: <span style={{ fontWeight: 500 }}>{error}</span>
+        <div style={{
+          marginTop: 12, padding: "10px 14px", borderRadius: 10,
+          border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.1)",
+          color: "#f87171", fontWeight: 600, fontSize: 13,
+        }}>
+          Error: {error}
         </div>
       )}
     </div>

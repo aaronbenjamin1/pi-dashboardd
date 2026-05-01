@@ -29,19 +29,21 @@ export function badgeStyle(kind: BadgeKind): React.CSSProperties {
   const base: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
-    padding: "4px 10px",
+    padding: "3px 9px",
     borderRadius: 999,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 700,
     border: "1px solid",
     userSelect: "none",
     whiteSpace: "nowrap",
-    lineHeight: 1.2,
+    lineHeight: 1.5,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
   };
-  if (kind === "good") return { ...base, background: "#eefbf1", borderColor: "#c8eed2", color: "#156b2d" };
-  if (kind === "warn") return { ...base, background: "#fff7ed", borderColor: "#fed7aa", color: "#7c3e0a" };
-  if (kind === "bad") return { ...base, background: "#fff1f2", borderColor: "#fecdd3", color: "#9f1239" };
-  return { ...base, background: "#f6f7f9", borderColor: "#e5e7eb", color: "#374151" };
+  if (kind === "bad")  return { ...base, background: "rgba(239,68,68,0.15)",   borderColor: "rgba(239,68,68,0.4)",   color: "#f87171" };
+  if (kind === "warn") return { ...base, background: "rgba(251,146,60,0.15)",  borderColor: "rgba(251,146,60,0.4)",  color: "#fb923c" };
+  if (kind === "good") return { ...base, background: "rgba(74,222,128,0.12)",  borderColor: "rgba(74,222,128,0.35)", color: "#4ade80" };
+  return                      { ...base, background: "rgba(148,163,184,0.08)", borderColor: "rgba(148,163,184,0.2)", color: "#94a3b8" };
 }
 
 export function severityKind(sev: string | null): BadgeKind {

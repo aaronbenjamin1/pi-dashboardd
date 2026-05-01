@@ -1,14 +1,17 @@
 "use client";
 
-const subtle: React.CSSProperties = { color: "#6b7280" };
+const C = { border: "#1a2d4a", text: "#e2e8f0", muted: "#4a6080", subtle: "#94a3b8", accent: "#3b82f6", input: "#0a1628" };
+
 const btn = (disabled: boolean): React.CSSProperties => ({
-  border: "1px solid #e5e7eb",
-  background: disabled ? "#f3f4f6" : "#fff",
-  padding: "10px 14px",
-  borderRadius: 12,
-  fontWeight: 700,
+  border: `1px solid ${C.border}`,
+  background: disabled ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.05)",
+  color: disabled ? C.muted : C.text,
+  padding: "8px 14px",
+  borderRadius: 10,
+  fontWeight: 600,
   cursor: disabled ? "not-allowed" : "pointer",
   fontSize: 13,
+  transition: "background 0.15s",
 });
 
 type Props = {
@@ -30,12 +33,13 @@ export default function Pagination({ page, totalPages, totalCount, fromShown, to
         ← Prev
       </button>
 
-      <div style={{ ...subtle, fontSize: 13 }}>
-        Page <strong style={{ color: "#111827" }}>{page}</strong> of{" "}
-        <strong style={{ color: "#111827" }}>{totalPages}</strong>
-        {" · "}
-        <strong style={{ color: "#111827" }}>{fromShown}</strong>–<strong style={{ color: "#111827" }}>{toShown}</strong>{" "}
-        of <strong style={{ color: "#111827" }}>{totalCount}</strong>
+      <div style={{ color: C.subtle, fontSize: 13 }}>
+        Page <strong style={{ color: C.text }}>{page}</strong> of{" "}
+        <strong style={{ color: C.text }}>{totalPages}</strong>
+        <span style={{ color: C.muted }}> · </span>
+        <strong style={{ color: C.text }}>{fromShown}</strong>–<strong style={{ color: C.text }}>{toShown}</strong>
+        <span style={{ color: C.muted }}> of </span>
+        <strong style={{ color: C.accent }}>{totalCount.toLocaleString()}</strong>
       </div>
 
       <button onClick={onNext} disabled={page >= totalPages || loading} style={btn(page >= totalPages || loading)}>
@@ -43,14 +47,17 @@ export default function Pagination({ page, totalPages, totalCount, fromShown, to
       </button>
 
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ ...subtle, fontSize: 13 }}>Jump:</span>
+        <span style={{ color: C.muted, fontSize: 13 }}>Jump:</span>
         <input
           type="number"
           min={1}
           max={totalPages}
           value={page}
           onChange={e => onJump(Math.max(1, Math.min(totalPages, Number(e.target.value) || 1)))}
-          style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid #e5e7eb", outline: "none", background: "#fff", width: 90, fontSize: 14 }}
+          style={{
+            padding: "8px 12px", borderRadius: 10, border: `1px solid ${C.border}`,
+            outline: "none", background: C.input, color: C.text, width: 80, fontSize: 13,
+          }}
         />
       </div>
     </div>

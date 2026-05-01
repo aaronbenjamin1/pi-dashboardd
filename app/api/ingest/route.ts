@@ -46,10 +46,20 @@ function parseRss(xml: string) {
 
 // ── PI classifier ─────────────────────────────────────────────────────────────
 
-const PI_TRIGGERS = [
-  "accident", "collision", "crash", "struck", "hit and run",
-  "injured", "injuries", "killed", "fatal", "fatality", "death", "died",
-  "victim", "hospital", "emergency", "ambulance",
+// Must have a physical incident (accident/crash/collision) — filters out tech/political news
+const INCIDENT_TRIGGERS = [
+  "accident", "collision", "crash", "crashed", "struck by", "hit and run", "hit-and-run",
+  "rollover", "overturned", "rear-end", "head-on", "sideswiped",
+  "veered into", "plowed into", "slammed into", "ran a red", "wrong-way",
+  "skidded", "pile-up", "pileup",
+];
+
+// Must also have a harm indicator
+const HARM_TRIGGERS = [
+  "killed", "dead", "fatal", "fatality", "died", "death",
+  "injured", "injuries", "hospitalized", "airlifted",
+  "critical condition", "serious injuries", "life-threatening",
+  "transported to hospital", "taken to hospital", "trauma center",
 ];
 
 const CASE_KEYWORDS: Record<string, string[]> = {
@@ -81,9 +91,11 @@ const NAME_PATTERNS = [
 function classify(title: string, description: string): Article | null {
   const text = `${title} ${description}`.toLowerCase();
 
-  // Must mention at least one PI trigger
-  const hasTrigger = PI_TRIGGERS.some(k => text.includes(k));
-  if (!hasTrigger) return null;
+  // Must have a physical incident AND a harm/injury indicator
+  const hasIncident = INCIDENT_TRIGGERS.some(k => text.includes(k));
+  if (!hasIncident) return null;
+  const hasHarm = HARM_TRIGGERS.some(k => text.includes(k));
+  if (!hasHarm) return null;
 
   // Must mention California
   const hasCA = CA_KEYWORDS.some(k => text.includes(k));
@@ -111,7 +123,7 @@ function classify(title: string, description: string): Article | null {
       break;
     }
   }
-  if (case_type === "unknown" && hasTrigger) case_type = "auto";
+  if (case_type === "unknown") case_type = "auto";
 
   // Lead score
   const base: Record<string, number> = { fatal: 88, serious_injury: 73, injury: 55, unknown: 32 };
